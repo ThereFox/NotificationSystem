@@ -1,0 +1,6 @@
+[submodule "EmailNotificator"]
+	path = EmailNotificator
+	url = https://github.com/ThereFox/EmailNotificator
+[submodule "NotificationKeeper"]
+	path = NotificationKeeper
+	url = https://github.com/ThereFox/NotificationKeeper
