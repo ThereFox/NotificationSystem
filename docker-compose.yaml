@@ -1,6 +1,8 @@
 services:
   producer:
     container_name: producer
+    profiles:
+      - Production
     depends_on:
       pgdb:
         condition: service_healthy
@@ -18,45 +20,73 @@ services:
   #   ports:
   #     - 50:50
 
-  zookeeper:
-    image: docker.io/bitnami/zookeeper:3.9
-    ports:
-      - "2181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+  # zookeeper:
+  #   image: docker.io/bitnami/zookeeper:3.9
+  #   profiles:
+  #     - testProducer
+  #     - Production
+  #   ports:
+  #     - "2181:2181"
+  #   environment:
+  #     - ZOOKEEPER_CLIENT_PORT=2181
+  #     - ZOOKEEPER_TICK_TIME=2000
+  #     - ALLOW_ANONYMOUS_LOGIN=yes
 
-  brocker:
-    image: bitnami/kafka:3.7
-    container_name: brocker
-    ports:
-      - 9092:9092
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_METADATA_MIGRATION_ENABLE=true
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+  # brocker:
+  #   image: confluentinc/cp-kafka:latest
+  #   container_name: brocker
+  #   profiles:
+  #     - testProducer
+  #     - Production
+  #   ports:
+  #     - 9092:9092
+  #     - 29092:29092
+  #   environment:
+  #     # KAFKA_BROKER_ID: 1
+  #     # KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+  #     #CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:29092
+  #     CONFLUENT_METRICS_ENABLE: 'false'
+  #     CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+  #   depends_on:
+  #     - zookeeper
+
+  zookeeper:
+      image: confluentinc/cp-zookeeper:latest
+      profiles:
+        - testProducer
+        - Production
+      environment:
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_TICK_TIME: 2000
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    profiles:
+      - testProducer
+      - Production
     depends_on:
       - zookeeper
-      - producer
-    volumes:
-      - "brockerMessages:/mnt/c/Users/Elcu/Videos/Data/Kafka"
-
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
     ports:
-      - 80:8080
+      - 29092:29092
     environment:
-      DYNAMIC_CONFIG_ENABLED: true
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://192.168.0.1:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   pgdb:
     image: postgres:latest
+    profiles:
+      - testProducer
+      - Production
     container_name: notificationDB
     environment:
       - POSTGRES_DB=Notifications123
@@ -81,6 +111,31 @@ services:
         PGADMIN_LISTEN_PORT: 7070
     ports:
       - 7070:7070
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.25.1
+    profiles:
+      - testProducer
+    #depends_on:
+    #  - brocker
+    ports:
+      - "8082:8080"
+    volumes:
+      - type: bind
+        source: "./console-config.yaml"
+        target: /opt/conduktor/console-config.yaml
+        read_only: true
+    environment:
+      CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.25.1
+    profiles:
+      - testProducer
+    ports:
+      - 8083:8080
+    environment:
+      CDK_CONSOLE-URL: "http://conduktor-console:8082"
 
 volumes:
   brockerMessages:

@@ -1,0 +1,25 @@
+organization:
+  name: "conduktor"
+
+database:
+  host: 'pgdb'
+  port: 5432
+  name: 'Notifications123'
+  username: 'dbAccesor'
+  password: 'testPassword'
+  connection_timeout: 30 # in seconds
+
+admin:
+  email: "<name@your_company.io>"
+  password: "admin"
+
+auth:
+  local-users:
+    - email: user@conduktor.io
+      password: user
+
+monitoring:
+  cortex-url: http://conduktor-monitoring:9009/
+  alert-manager-url: http://conduktor-monitoring:9010/
+  callback-url: http://conduktor-console:8080/monitoring/api/
+  notifications-callback-url: http://localhost:8080
