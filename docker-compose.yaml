@@ -20,6 +20,20 @@ services:
   #   ports:
   #     - 50:50
 
+  logDatabase:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse_logDB
+    profiles:
+      - testProducer
+      - Production
+    environment:
+      CLICKHOUSE_DB: Logs
+      # CLICKHOUSE_USER: therefox123
+      # CLICKHOUSE_PASSWORD: therefox123
+    ports:
+      - 8123:8123
+      - 9000:9000/tcp
+
   # zookeeper:
   #   image: docker.io/bitnami/zookeeper:3.9
   #   profiles:
