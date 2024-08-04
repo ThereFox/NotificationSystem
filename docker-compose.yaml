@@ -1,8 +1,6 @@
 services:
   producer:
     container_name: producer
-    profiles:
-      - Production
     depends_on:
       pgdb:
         condition: service_healthy
@@ -21,86 +19,37 @@ services:
   #     - 50:50
 
   logDatabase:
-    image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse_logDB
-    profiles:
-      - testProducer
-      - Production
+    image: influxdb:latest
     environment:
-      CLICKHOUSE_DB: Logs
-      # CLICKHOUSE_USER: therefox123
-      # CLICKHOUSE_PASSWORD: therefox123
+      DOCKER_INFLUXDB_INIT_USERNAME: ThereFox
+      DOCKER_INFLUXDB_INIT_PASSWORD: testPassword123
+      DOCKER_INFLUXDB_INIT_ORG: ThereFoxOrganisation
+      DOCKER_INFLUXDB_INIT_BUCKET: TestBucket
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: TestToken
     ports:
-      - 8123:8123
-      - 9000:9000/tcp
+      - 8051:8086
 
-  # zookeeper:
-  #   image: docker.io/bitnami/zookeeper:3.9
-  #   profiles:
-  #     - testProducer
-  #     - Production
-  #   ports:
-  #     - "2181:2181"
-  #   environment:
-  #     - ZOOKEEPER_CLIENT_PORT=2181
-  #     - ZOOKEEPER_TICK_TIME=2000
-  #     - ALLOW_ANONYMOUS_LOGIN=yes
+  zookeeper: 
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - 2181:2181
+    environment: 
+      ZOOKEEPER_CLIENT_PORT: 2181
 
-  # brocker:
-  #   image: confluentinc/cp-kafka:latest
-  #   container_name: brocker
-  #   profiles:
-  #     - testProducer
-  #     - Production
-  #   ports:
-  #     - 9092:9092
-  #     - 29092:29092
-  #   environment:
-  #     # KAFKA_BROKER_ID: 1
-  #     # KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-  #     #CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:29092
-  #     CONFLUENT_METRICS_ENABLE: 'false'
-  #     CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
-  #   depends_on:
-  #     - zookeeper
-
-  zookeeper:
-      image: confluentinc/cp-zookeeper:latest
-      profiles:
-        - testProducer
-        - Production
-      environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
-  
   kafka:
-    image: confluentinc/cp-kafka:latest
-    profiles:
-      - testProducer
-      - Production
+    image: ubuntu/kafka:latest
+    environment:
+      - TZ=UTC
+      - ZOOKEEPER_HOST=zookeeper
+      - ZOOKEEPER_PORT=2181
     depends_on:
       - zookeeper
+      - producer
     ports:
-      - 29092:29092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://192.168.0.1:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - 9092:9092
 
   pgdb:
     image: postgres:latest
-    profiles:
-      - testProducer
-      - Production
     container_name: notificationDB
     environment:
       - POSTGRES_DB=Notifications123
@@ -118,6 +67,8 @@ services:
       start_period: 20s
 
   adminDB:
+    profiles:
+      - WithUIDebug
     image: elestio/pgadmin:latest
     environment:
         PGADMIN_DEFAULT_EMAIL: test@test.com
@@ -127,13 +78,13 @@ services:
       - 7070:7070
 
   conduktor-console:
-    image: conduktor/conduktor-console:1.25.1
     profiles:
-      - testProducer
+      - WithUIDebug
+    image: conduktor/conduktor-console:1.25.1
     #depends_on:
     #  - brocker
     ports:
-      - "8082:8080"
+      - 8082:8080
     volumes:
       - type: bind
         source: "./console-config.yaml"
@@ -143,9 +94,9 @@ services:
       CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
 
   conduktor-monitoring:
-    image: conduktor/conduktor-console-cortex:1.25.1
     profiles:
-      - testProducer
+      - WithUIDebug
+    image: conduktor/conduktor-console-cortex:1.25.1
     ports:
       - 8083:8080
     environment:
