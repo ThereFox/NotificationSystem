@@ -12,9 +12,12 @@ services:
   consumer:
     build: ./EmailNotificator\Worker\Dockerfile
     container_name: consumer
+<<<<<<< HEAD
     depends_on:
       postgreConsumer:
         condition: service_healthy
+=======
+>>>>>>> e841376c30acb99d453f9ec99f4c4ec187642be4
     ports:
       - 50:50
 
