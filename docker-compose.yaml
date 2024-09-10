@@ -2,21 +2,21 @@ services:
   producer:
     container_name: producer
     depends_on:
-      pgdb:
+      postgreProducer:
         condition: service_healthy
-      #- brocker
-    build:
-      dockerfile: ./API/Dockerfile
-      context: ./NotificationKeeper
+    build: ./NotificationKeeper\API\Dockerfile
     ports:
       - 8080:8080
     
 
-  # consumer:
-  #   build: ./EmailNotificator/View/Dockerfile
-  #   container_name: consumer
-  #   ports:
-  #     - 50:50
+  consumer:
+    build: ./EmailNotificator\Worker\Dockerfile
+    container_name: consumer
+    depends_on:
+      postgreConsumer:
+        condition: service_healthy
+    ports:
+      - 50:50
 
   logDatabase:
     image: influxdb:latest
@@ -70,20 +70,31 @@ services:
       timeout: 10s
       retries: 5
 
-  
-
-
-  pgdb:
+  postgreProducer:
     image: postgres:latest
-    container_name: notificationDB
+    container_name: notificationDB_producer
     environment:
-      - POSTGRES_DB=Notifications123
+      - POSTGRES_DB=Producer
       - POSTGRES_PASSWORD=testPassword
       - POSTGRES_USER=dbAccesor
     ports:
       - 5432:5432
-    volumes:
-      - databaseVolume:/mnt/c/Users/Elcu/Videos/Data/Database
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
+
+  postgreConsumer:
+    image: postgres:latest
+    container_name: notificationDB_consumer
+    environment:
+      - POSTGRES_DB=Consumer
+      - POSTGRES_PASSWORD=testPassword
+      - POSTGRES_USER=dbAccesor
+    ports:
+      - 5433:5432
     healthcheck:
       test: pg_isready
       interval: 10s
@@ -102,30 +113,30 @@ services:
     ports:
       - 7070:7070
 
-  conduktor-console:
-    profiles:
-      - WithUIDebug
-    image: conduktor/conduktor-console:1.25.1
-    #depends_on:
-    #  - brocker
-    ports:
-      - 8082:8080
-    volumes:
-      - type: bind
-        source: "./console-config.yaml"
-        target: /opt/conduktor/console-config.yaml
-        read_only: true
-    environment:
-      CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
+  # conduktor-console:
+  #   profiles:
+  #     - WithUIDebug
+  #   image: conduktor/conduktor-console:1.25.1
+  #   #depends_on:
+  #   #  - brocker
+  #   ports:
+  #     - 8082:8080
+  #   volumes:
+  #     - type: bind
+  #       source: "./console-config.yaml"
+  #       target: /opt/conduktor/console-config.yaml
+  #       read_only: true
+  #   environment:
+  #     CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
 
-  conduktor-monitoring:
-    profiles:
-      - WithUIDebug
-    image: conduktor/conduktor-console-cortex:1.25.1
-    ports:
-      - 8083:8080
-    environment:
-      CDK_CONSOLE-URL: "http://conduktor-console:8082"
+  # conduktor-monitoring:
+  #   profiles:
+  #     - WithUIDebug
+  #   image: conduktor/conduktor-console-cortex:1.25.1
+  #   ports:
+  #     - 8083:8080
+  #   environment:
+  #     CDK_CONSOLE-URL: "http://conduktor-console:8082"
 
 volumes:
   brockerMessages:
