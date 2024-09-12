@@ -73,6 +73,16 @@ services:
       timeout: 10s
       retries: 5
 
+  redisCache:
+    image: redis:latest
+    container_name: notification_cache
+    #environment:
+    #  - REDIS_PASSWORD=CommonPassword
+    #  - REDIS_USER=ThereFox
+    #  - REDIS_USER_PASSWORD=ThereFoxPassword
+    ports:
+      - 6400:6379
+
   postgreProducer:
     image: postgres:latest
     container_name: notificationDB_producer
