@@ -4,6 +4,12 @@ services:
     depends_on:
       postgreProducer:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+      logDatabase:
+        condition: service_healthy
+      redisCache:
+        condition: service_started
     build:
       dockerfile: ./API/Dockerfile
       context: ./NotificationKeeper
@@ -18,6 +24,13 @@ services:
     depends_on:
       postgreConsumer:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+      logDatabase:
+        condition: service_healthy
+      redisCache:
+        condition: service_started
+
     ports:
       - 50:50
 
@@ -28,9 +41,14 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD: testPassword123
       DOCKER_INFLUXDB_INIT_ORG: ThereFoxOrganisation
       DOCKER_INFLUXDB_INIT_BUCKET: TestBucket
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: TestToken
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 6zhpW6h4fiLxjjSjItYM9lVVF9LYfyvAmtyCLF-ZXxNJyuL86u626s-AZxmsn0F4PuscaBtC3yl2yLX_bH4P7w==
     ports:
       - 8051:8086
+    healthcheck:
+        test: "curl -f http://logDatabase:8086/ping"
+        interval: 5s
+        timeout: 10s
+        retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
