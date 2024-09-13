@@ -11,7 +11,8 @@
 - [Redis]([https://redis.io/](https://vk.com/away.php?to=https%3A%2F%2Fredis.io%2F&cc_key=))  
 - [InfluxDB]([https://www.influxdata.com/](https://vk.com/away.php?to=https%3A%2F%2Fwww.influxdata.com%2F&cc_key=))  
 - [ApacheKafka]([https://kafka.apache.org/](https://vk.com/away.php?to=https%3A%2F%2Fkafka.apache.org%2F&cc_key=))  
-- [PostgreSQL]([https://www.postgresql.org/](https://vk.com/away.php?to=https%3A%2F%2Fwww.postgresql.org%2F&cc_key=))  
+- [PostgreSQL]([https://www.postgresql.org/](https://vk.com/away.php?to=https%3A%2F%2Fwww.postgresql.org%2F&cc_key=))
+- [Docker](https://www.docker.com)
   
 ## Использование  
   
