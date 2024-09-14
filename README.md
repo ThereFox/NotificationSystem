@@ -13,6 +13,11 @@
 - [ApacheKafka](https://kafka.apache.org/)  
 - [PostgreSQL](https://www.postgresql.org/)
 - [Docker](https://www.docker.com)
+
+## Как система выглядит, в общих чертах
+
+![image](https://github.com/user-attachments/assets/a0724284-e91a-40e7-b8f2-228862e20e3d)
+
   
 ## Использование  
   
